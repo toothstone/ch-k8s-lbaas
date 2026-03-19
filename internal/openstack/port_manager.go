@@ -26,10 +26,10 @@ import (
 	subnetsv2 "github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
 	"k8s.io/klog"
+	"github.com/google/uuid"
 )
 
 const (
-	TagLBManagedPort         = "cah-loadbalancer.k8s.cloudandheat.com/managed"
 	DescriptionLBManagedPort = "Managed by cah-loadbalancer"
 )
 
@@ -39,6 +39,7 @@ var (
 	ErrPortIsNil           = errors.New("Port is nil")
 	ErrNoFloatingIPCreated = errors.New("No floating IP was created by OpenStack")
 	ErrVRRPSetupFailed     = errors.New("Failed to update address pairs of all agents")
+	TagLBManagedPort       = "cah-loadbalancer.k8s.cloudandheat.com/managed"
 )
 
 // We need options which are not included in the default gophercloud struct
@@ -75,6 +76,8 @@ type OpenStackL3PortManager struct {
 }
 
 func (client *OpenStackClient) NewOpenStackL3PortManager(networkConfig *config.NetworkingOpts, agents []config.Agent, additionalAddressPairs []string) (*OpenStackL3PortManager, error) {
+
+	TagLBManagedPort = "cah-loadbalancer.k8s.cloudandheat.com/" + uuid.NewString()
 
 	networkingclient, err := client.NewNetworkV2()
 	if err != nil {
@@ -175,7 +178,7 @@ func (pm *OpenStackL3PortManager) ProvisionPort() (string, error) {
 	// XXX: this is meh because we can only set the tag after the port was
 	// created. If we get killed between the previous line and setting the
 	// tag, the port will linger, unusedly.
-	// If this is a problem, we’ll have to switch to matching based on the name
+	// If this is a problem, we'll have to switch to matching based on the name
 	// or description instead.
 	if err != nil {
 		return "", err

@@ -40,12 +40,12 @@ jobs:
     - name: Build LBaaS agent
       run: go build -v ./cmd/ch-k8s-lbaas-agent/ch-k8s-lbaas-agent.go
 
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: ch-k8s-lbaas-agent
         path: ch-k8s-lbaas-agent
 
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: ch-k8s-lbaas-controller
         path: ch-k8s-lbaas-controller
