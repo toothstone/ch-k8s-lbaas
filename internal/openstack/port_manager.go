@@ -15,10 +15,8 @@
 package openstack
 
 import (
-	"context"
 	"errors"
 	"sync"
-	"time"
 
 	"github.com/cloudandheat/ch-k8s-lbaas/internal/config"
 	"github.com/gophercloud/gophercloud"
@@ -27,9 +25,8 @@ import (
 	portsv2 "github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	subnetsv2 "github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
+	"github.com/google/uuid"
 )
 
 const (
@@ -44,20 +41,6 @@ var (
 	ErrVRRPSetupFailed     = errors.New("Failed to update address pairs of all agents")
 	TagLBManagedPort       = "cah-loadbalancer.k8s.cloudandheat.com/managed"
 )
-
-// InitTagLBManagedPort initializes the TagLBManagedPort with the kube-system namespace UID
-func InitTagLBManagedPort(kubeClient kubernetes.Interface) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	namespace, err := kubeClient.CoreV1().Namespaces().Get(ctx, "kube-system", metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	TagLBManagedPort = string(namespace.UID)
-	return nil
-}
 
 // We need options which are not included in the default gophercloud struct
 type CustomCreateOpts struct {
@@ -92,12 +75,9 @@ type OpenStackL3PortManager struct {
 	ports                  PortClient
 }
 
-func (client *OpenStackClient) NewOpenStackL3PortManager(networkConfig *config.NetworkingOpts, agents []config.Agent, additionalAddressPairs []string, kubeClient kubernetes.Interface) (*OpenStackL3PortManager, error) {
+func (client *OpenStackClient) NewOpenStackL3PortManager(networkConfig *config.NetworkingOpts, agents []config.Agent, additionalAddressPairs []string) (*OpenStackL3PortManager, error) {
 
-	err := InitTagLBManagedPort(kubeClient)
-	if err != nil {
-		return nil, err
-	}
+	TagLBManagedPort = "cah-loadbalancer.k8s.cloudandheat.com/" + uuid.NewString()
 
 	networkingclient, err := client.NewNetworkV2()
 	if err != nil {

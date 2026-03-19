@@ -89,7 +89,6 @@ func main() {
 			&fileCfg.OpenStack.Networking,
 			fileCfg.Agents.Agents,
 			fileCfg.Agents.AdditionalIps,
-			kubeClient,
 		)
 		if err != nil {
 			klog.Fatalf("Failed to create openstack L3 port manager: %s", err.Error())
